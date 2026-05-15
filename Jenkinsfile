@@ -63,10 +63,10 @@ pipeline {
                     docker login ${NEXUS_REGISTRY} -u $USERNAME -p $PASSWORD
 
                     docker tag ${IMAGE_NAME}:latest \
-                    ${NEXUS_REGISTRY}/repository/docker-hosted/${IMAGE_NAME}:latest
+                    ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
 
                     docker push \
-                    ${NEXUS_REGISTRY}/repository/docker-hosted/${IMAGE_NAME}:latest
+                   ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
                     """
                 }
             }
@@ -79,7 +79,7 @@ pipeline {
                 sh """
                 export KUBECONFIG=/var/jenkins_home/.kube/config
 
-                kubectl apply -f k8s/app-deploy-service.yaml
+                kubectl apply -f k8s/deployment.yaml
                 """
             }
         }
