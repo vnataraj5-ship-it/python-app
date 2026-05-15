@@ -54,7 +54,7 @@ pipeline {
             steps {
 
                 withCredentials([usernamePassword(
-                    credentialsId: 'nexus-cred',
+                    credentialsId: 'nexus-creds',
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'PASSWORD'
                 )]) {
