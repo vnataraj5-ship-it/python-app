@@ -17,7 +17,9 @@ pipeline {
 
             steps {
 
-                git 'https://github.com/vnataraj5-ship-it/python-app.git'
+                git branch: 'main', 
+
+                url: 'https://github.com/vnataraj5-ship-it/python-app.git'
             }
         }
 
