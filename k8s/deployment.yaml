@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: python-app
-        image: <NEXUS-IP>:8082/repository/docker-hosted/python-app:latest
+        image: image: 13.126.233.214:8082/repository/docker-hosted/python-app:latest
 
         ports:
         - containerPort: 8085
