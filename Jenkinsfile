@@ -6,7 +6,7 @@ pipeline {
 
         IMAGE_NAME = "python-app"
 
-        NEXUS_REGISTRY = "<NEXUS-IP>:8082"
+        NEXUS_REGISTRY = "13.126.233.214:8082"
 
         SONAR_SCANNER = tool 'sonar-scanner'
     }
@@ -16,6 +16,7 @@ pipeline {
         stage('Checkout') {
 
             steps {
+
                 git 'https://github.com/vnataraj5-ship-it/python-app.git'
             }
         }
@@ -30,8 +31,7 @@ pipeline {
                     ${SONAR_SCANNER}/bin/sonar-scanner \
                     -Dsonar.projectKey=python-app \
                     -Dsonar.sources=. \
-                    -Dsonar.host.url=http://<SONAR-IP>:9000 \
-                    -Dsonar.login=<SONAR-TOKEN>
+                    -Dsonar.host.url=http://13.126.233.214:9000
                     """
                 }
             }
@@ -52,7 +52,7 @@ pipeline {
             steps {
 
                 withCredentials([usernamePassword(
-                    credentialsId: 'nexus-creds',
+                    credentialsId: 'nexus-cred',
                     usernameVariable: 'USERNAME',
                     passwordVariable: 'PASSWORD'
                 )]) {
@@ -75,7 +75,9 @@ pipeline {
             steps {
 
                 sh """
-                kubectl apply -f k8s/deployment.yaml
+                export KUBECONFIG=/var/jenkins_home/.kube/config
+
+                kubectl apply -f k8s/app-deploy-service.yaml
                 """
             }
         }
