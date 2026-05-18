@@ -19,7 +19,7 @@ spec:
     spec:
       containers:
       - name: python-app
-        image: 13.126.233.214:8082/python-app:latest
+        image: 13.235.242.211:8082/python-app:latest
 
         ports:
         - containerPort: 8085
