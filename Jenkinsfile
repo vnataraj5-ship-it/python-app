@@ -6,7 +6,7 @@ pipeline {
 
         IMAGE_NAME = "python-app"
 
-        NEXUS_REGISTRY = "13.126.233.214:8082"
+        NEXUS_REGISTRY = "13.235.242.211:8082"
 
         SONAR_SCANNER = tool 'sonar-scanner'
     }
@@ -33,7 +33,7 @@ pipeline {
                     ${SONAR_SCANNER}/bin/sonar-scanner \
                     -Dsonar.projectKey=python-app \
                     -Dsonar.sources=. \
-                    -Dsonar.host.url=http://13.126.233.214:9000
+                    -Dsonar.host.url=http://13.235.242.211:9000
                     """
                 }
             }
