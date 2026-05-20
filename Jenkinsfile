@@ -2,13 +2,20 @@ pipeline {
 
     agent any
 
+    tools {
+        maven 'maven'
+    }
+
     environment {
 
-        IMAGE_NAME = "python-app"
+        SONAR_URL = "http://13.206.222.52:9000"
 
-        NEXUS_REGISTRY = "13.235.242.211:8082"
+        NEXUS_URL = "http://13.206.222.52:8081"
 
-        SONAR_SCANNER = tool 'sonar-scanner'
+        DEPLOY_IP = "13.127.8.29"
+
+        ARTIFACT_NAME = "java-app-cicd-1.0.war"
+
     }
 
     stages {
@@ -17,10 +24,11 @@ pipeline {
 
             steps {
 
-                git branch: 'main', 
+                git branch: 'main',
+                url: 'https://github.com/vnataraj5-ship-it/java-app-cicd.git'
 
-                url: 'https://github.com/vnataraj5-ship-it/python-app.git'
             }
+
         }
 
         stage('SonarQube Analysis') {
@@ -29,59 +37,78 @@ pipeline {
 
                 withSonarQubeEnv('sonar-server') {
 
-                    sh """
-                    ${SONAR_SCANNER}/bin/sonar-scanner \
-                    -Dsonar.projectKey=python-app \
-                    -Dsonar.sources=. \
-                    -Dsonar.host.url=http://13.235.242.211:9000
-                    """
+                    sh '''
+                    mvn clean verify sonar:sonar \
+                    -Dsonar.projectKey=java-app-cicd \
+                    -Dsonar.host.url=$SONAR_URL
+                    '''
+
                 }
+
             }
+
         }
 
-        stage('Docker Build') {
+        stage('Build') {
 
             steps {
 
-                sh """
-                docker build -t ${IMAGE_NAME}:latest .
-                """
+                sh '''
+                mvn clean package
+                '''
+
             }
+
         }
 
-        stage('Push Docker Image to Nexus') {
+        stage('Push Artifact To Nexus') {
 
             steps {
 
-                withCredentials([usernamePassword(
-                    credentialsId: 'nexus-creds',
-                    usernameVariable: 'USERNAME',
-                    passwordVariable: 'PASSWORD'
-                )]) {
+                withCredentials([
+                    usernamePassword(
+                        credentialsId: 'nexus-creds',
+                        usernameVariable: 'NEXUS_USER',
+                        passwordVariable: 'NEXUS_PASS'
+                    )
+                ]) {
 
-                    sh """
-                    docker login ${NEXUS_REGISTRY} -u $USERNAME -p $PASSWORD
+                    sh '''
+                    curl -v -u $NEXUS_USER:$NEXUS_PASS \
+                    --upload-file target/$ARTIFACT_NAME \
+                    $NEXUS_URL/repository/maven-releases/com/example/java-app-cicd/1.0/$ARTIFACT_NAME
+                    '''
 
-                    docker tag ${IMAGE_NAME}:latest \
-                    ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
-
-                    docker push \
-                   ${NEXUS_REGISTRY}/${IMAGE_NAME}:latest
-                    """
                 }
+
             }
+
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy To EC2') {
 
             steps {
 
-                sh """
-                export KUBECONFIG=/var/jenkins_home/.kube/config
+                sh '''
+                ssh -o StrictHostKeyChecking=no ubuntu@$DEPLOY_IP "
 
-                kubectl apply -f k8s/deployment.yaml
-                """
+                wget \
+                --user=admin \
+                --password='Qwert@mnv1234' \
+                -O /tmp/$ARTIFACT_NAME \
+                $NEXUS_URL/repository/maven-releases/com/example/java-app-cicd/1.0/$ARTIFACT_NAME
+
+                sudo cp /tmp/$ARTIFACT_NAME /var/lib/tomcat10/webapps/
+
+                sudo systemctl restart tomcat10
+
+                "
+                '''
+
             }
+
         }
+
     }
+
 }
